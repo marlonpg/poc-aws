@@ -1,0 +1,30 @@
+# AWS Key Pairs - NEVER commit private keys!
+*.pem
+poc-aws-key.pem
+
+# Environment variables - NEVER commit secrets!
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+target/
+build/
+dist/
+*.jar
+*.war
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
