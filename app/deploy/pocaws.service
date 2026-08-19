@@ -1,0 +1,22 @@
+[Unit]
+Description=poc-aws Spring Boot API
+After=network.target
+
+[Service]
+User=pocaws
+Group=pocaws
+WorkingDirectory=/opt/pocaws
+EnvironmentFile=-/opt/pocaws/app.env
+ExecStart=/usr/bin/java -jar /opt/pocaws/app.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/pocaws
+
+[Install]
+WantedBy=multi-user.target
