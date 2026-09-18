@@ -1,3 +1,5 @@
+claude code --dangerously-skip-permissions --resume "new-presentation"
+
 # Running this project
 
 Operational commands for the lightning-talk demo (`demo-app/`) and its
