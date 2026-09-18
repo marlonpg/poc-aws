@@ -61,17 +61,8 @@ terraform apply
      --tags Key="Patch Group",Value=$(terraform output -raw patch_group_tag_value)
    ```
 
-6. **Bootstrap the instance filesystem** (creates the `pocaws` user,
-   `/opt/pocaws`, systemd unit; installs Java 17 via dnf):
-   ```
-   aws ssm send-command \
-     --instance-ids i-02493c4d817d45bf4 \
-     --document-name AWS-RunShellScript \
-     --parameters commands="$(cat scripts/bootstrap.sh)" \
-     --output text --query 'Command.CommandId'
-   ```
-   Check status with `aws ssm get-command-invocation --command-id <id>
-   --instance-id i-02493c4d817d45bf4`.
+Filesystem bootstrap for the app itself lives with the app now -
+see `../demo-app/README.md` and `../RUN.md`.
 
 ## Cleanup (after a few successful deploys)
 
@@ -81,10 +72,68 @@ you're confident the new setup is stable:
 aws ec2 delete-security-group --group-id sg-00ac13bdd14e152e6
 ```
 
+## Local CLI auth: `pocaws-admin`, not root
+
+`terraform apply`/`aws` commands run as the IAM user `pocaws-admin`
+(the `default` CLI profile), not the account root user. Root's access key
+is deactivated. `pocaws-admin` has two policies attached:
+
+- AWS managed `PowerUserAccess` (everything except IAM/Organizations/Account).
+- A custom policy, `pocaws-terraform-iam`, scoped to just this project's IAM
+  resources (needed because PowerUserAccess deliberately excludes IAM):
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "ManageProjectRolesAndProfiles",
+        "Effect": "Allow",
+        "Action": [
+          "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:TagRole",
+          "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy",
+          "iam:AttachRolePolicy", "iam:DetachRolePolicy",
+          "iam:ListRolePolicies", "iam:ListAttachedRolePolicies",
+          "iam:ListInstanceProfilesForRole", "iam:CreateInstanceProfile",
+          "iam:DeleteInstanceProfile", "iam:GetInstanceProfile",
+          "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
+          "iam:TagInstanceProfile"
+        ],
+        "Resource": [
+          "arn:aws:iam::*:role/pocaws-*",
+          "arn:aws:iam::*:instance-profile/pocaws-*"
+        ]
+      },
+      {
+        "Sid": "ManageGithubOidcProvider",
+        "Effect": "Allow",
+        "Action": [
+          "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider",
+          "iam:GetOpenIDConnectProvider", "iam:TagOpenIDConnectProvider",
+          "iam:UpdateOpenIDConnectProviderThumbprint",
+          "iam:AddClientIDToOpenIDConnectProvider"
+        ],
+        "Resource": "arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com"
+      },
+      {
+        "Sid": "PassProjectRolesToServices",
+        "Effect": "Allow",
+        "Action": "iam:PassRole",
+        "Resource": "arn:aws:iam::*:role/pocaws-*"
+      },
+      {
+        "Sid": "ListOnlyNoResourceLevelSupport",
+        "Effect": "Allow",
+        "Action": ["iam:ListRoles", "iam:ListOpenIDConnectProviders"],
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+See `../RUN.md` for the commands used to set this up.
+
 ## Deferred / not built here
 
-- Root AWS access key cleanup — still using the account root key locally for
-  `terraform apply`. Follow-up: create a dedicated IAM admin user, switch the
-  CLI to it, then deactivate and delete the root key.
 - Remote Terraform state backend (S3 + lock table) — local state is fine solo.
 - `terraform plan` on PRs in CI — would need a second, read-only IAM role.

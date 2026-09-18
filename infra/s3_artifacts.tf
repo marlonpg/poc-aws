@@ -22,12 +22,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
   bucket = aws_s3_bucket.artifacts.id
 
   rule {
-    id     = "expire-old-jars"
+    id     = "expire-old-artifact-versions"
     status = "Enabled"
 
-    filter {
-      prefix = "app/"
-    }
+    filter {}
 
     noncurrent_version_expiration {
       noncurrent_days = var.artifact_retention_days

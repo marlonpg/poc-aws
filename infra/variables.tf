@@ -21,7 +21,7 @@ variable "admin_cidr" {
 }
 
 variable "app_port" {
-  description = "Port the Spring Boot API listens on"
+  description = "Port the app on the EC2 instance listens on"
   type        = number
   default     = 8080
 }

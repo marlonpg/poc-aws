@@ -29,6 +29,9 @@ Thumbs.db
 *.log
 logs/
 
+# Generated SSM command payloads (demo-app)
+demo-app/deploy-params.json
+
 # Terraform
 infra/.terraform/
 *.tfstate
