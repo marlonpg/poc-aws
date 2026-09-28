@@ -62,7 +62,7 @@ terraform apply
    ```
 
 Filesystem bootstrap for the app itself lives with the app now -
-see `../demo-app/README.md` and `../RUN.md`.
+see `../RUN.md`.
 
 ## Cleanup (after a few successful deploys)
 

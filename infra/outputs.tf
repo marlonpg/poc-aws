@@ -6,8 +6,16 @@ output "instance_public_ip" {
   value = data.aws_instance.app.public_ip
 }
 
+output "demo_orchestrator_log_group" {
+  value = aws_cloudwatch_log_group.demo_orchestrator.name
+}
+
 output "demo_app_log_group" {
   value = aws_cloudwatch_log_group.demo_app.name
+}
+
+output "demo_app_db_log_group" {
+  value = aws_cloudwatch_log_group.demo_app_db.name
 }
 
 output "instance_profile_name" {
