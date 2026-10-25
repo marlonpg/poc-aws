@@ -26,20 +26,8 @@ variable "app_port" {
   default     = 8080
 }
 
-variable "github_org" {
-  description = "GitHub org/user that owns the deploy repo"
-  type        = string
-  default     = "marlonpg"
-}
-
-variable "github_repo" {
-  description = "GitHub repo name allowed to assume the deploy role via OIDC"
-  type        = string
-  default     = "poc-aws"
-}
-
 variable "artifact_retention_days" {
-  description = "Days to retain old jar versions in the S3 artifact bucket"
+  description = "Days to retain old noncurrent object versions in the S3 artifact bucket"
   type        = number
   default     = 14
 }

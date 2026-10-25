@@ -26,10 +26,6 @@ output "artifact_bucket_name" {
   value = aws_s3_bucket.artifacts.id
 }
 
-output "gha_deploy_role_arn" {
-  value = aws_iam_role.gha_deploy.arn
-}
-
 output "cloudtrail_bucket_name" {
   value = aws_s3_bucket.cloudtrail_logs.id
 }

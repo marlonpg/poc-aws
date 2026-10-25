@@ -8,10 +8,10 @@ Terraform for the poc-aws project. Free-tier only. State is local
 The EC2 instance (`i-02493c4d817d45bf4`) is pre-existing (created via the
 console) and is **not** imported into Terraform. Terraform only creates
 free-standing resources (new security group, IAM instance profile, S3
-buckets, OIDC/IAM roles, CloudTrail, patch baseline). Attaching the new SG
-and instance profile to the instance is a manual step below, by design —
-importing a hand-created instance risks Terraform proposing a destructive
-replace later if some attribute doesn't match.
+buckets, CloudWatch/X-Ray permissions, CloudTrail, patch baseline).
+Attaching the new SG and instance profile to the instance is a manual step
+below, by design — importing a hand-created instance risks Terraform
+proposing a destructive replace later if some attribute doesn't match.
 
 ## First-time setup
 
@@ -130,6 +130,15 @@ is deactivated. `pocaws-admin` has two policies attached:
     ]
   }
   ```
+
+  **Known unused leftover**: `ManageGithubOidcProvider` and the
+  `iam:ListOpenIDConnectProviders` action became dead permissions once
+  `infra/iam_github_oidc.tf` was removed (the OIDC provider/GHA deploy role
+  it managed no longer exist). `pocaws-admin` can't trim its own policy
+  (no `iam:*PolicyVersion` grant - by design, it can't self-escalate), so
+  removing this requires either the account owner editing the policy in
+  the Console, or briefly reactivating the deactivated root key. Left as-is
+  since it's a dangling permission, not a live resource or active risk.
 
 See `../RUN.md` for the commands used to set this up.
 
