@@ -9,10 +9,10 @@ from flask import Flask, jsonify, request
 # sampling=False: trace every request, not just the default 1/sec + 5% -
 # fine for low demo volume, NOT how you'd run this in production.
 xray_recorder.configure(service="demo-app-db", sampling=False)
-patch_all()  # instruments sqlite3 so its calls show up as X-Ray subsegments
+patch_all()    # instruments the requests library so the call below traces
 
 app = Flask(__name__)
-XRayMiddleware(app, xray_recorder)
+XRayMiddleware(app, xray_recorder) # register hooks for receiving a request (checks if it has a traceId, if not generate a new one)
 
 DB_PATH = os.environ.get("DB_PATH", "/opt/pocaws-demo-db/orders.db")
 

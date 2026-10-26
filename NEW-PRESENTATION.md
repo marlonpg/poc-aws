@@ -2,13 +2,13 @@
 
 ## 1. Intro
 
-*"This is a POC I built: three small services -
-`demo-orchestrator` (public, port 8080) calls `demo-app` (port 8081),
-which calls `demo-app-db` (port 8082, a real sqlite connection) -
-all running on one EC2 instance. Everything's provisioned with Terraform:
-`infra/` has the security group, the instance's IAM role, CloudWatch log
-groups, the metric/alarm setup, and the dashboard - about a dozen small
-.tf files, no manual console clicking to set any of it up."*
+This is a POC I built: 
+1. `demo-orchestrator` (public, port 8080) 
+2. calls `demo-app` (port 8081),
+3. which calls `demo-app-db` (port 8082, a real sqlite connection) all running on one EC2 instance. 
+
+Everything's provisioned with Terraform:
+`infra/` has the security group, the instance's IAM role, CloudWatch log groups, the metric/alarm setup, and the dashboard - about a dozen small .tf files, no manual console clicking to set any of it up.
 
 
 ## 2. AWS-native troubleshooting tools
@@ -24,24 +24,15 @@ groups, the metric/alarm setup, and the dashboard - about a dozen small
 
 `demo-common/generate-traffic.py` - stdlib only (no pip install), uses
 `ThreadPoolExecutor` to fire requests concurrently instead of one at a
-time, closer to real traffic than a sequential loop:
-
+time:
 ```
 python3 demo-common/generate-traffic.py
 # defaults: 1000 healthy + 30 broken requests, concurrency 20
 ```
 
-Note for whoever re-runs this: the three Flask apps run with
-`threaded=True` specifically so they can handle concurrent connections -
-without it, parallel requests queue up behind each other and the error
-rate goes up for the wrong reason (the test tool, not the scenario).
-
-Run this a few minutes before showing the console - gives CloudWatch and
-X-Ray a moment to ingest everything.
-
 ## 4. Classic troubleshooting steps - CloudWatch
 
-From there, CloudWatch gives you more than just "search the logs":
+CloudWatch gives you more than just "search the logs":
 
 - **Metric Filters** - turn a log line (e.g. `ERROR: ...`) into a number over time, with zero code change. That's how `DbErrorCount` exists in this project.
 - **Alarms** - watch that metric and flip state automatically (`pocaws-db-errors`, defined in `infra/metrics.tf`).
