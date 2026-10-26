@@ -42,6 +42,7 @@ After=network.target
 User=pocaws-demo
 Group=pocaws-demo
 WorkingDirectory=/opt/pocaws-orchestrator
+Environment=PYTHONUNBUFFERED=1
 ExecStart=/usr/bin/python3 /opt/pocaws-orchestrator/app.py
 StandardOutput=append:/opt/pocaws-orchestrator/app.log
 StandardError=append:/opt/pocaws-orchestrator/app.log

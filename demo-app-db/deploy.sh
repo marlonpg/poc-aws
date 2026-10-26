@@ -42,6 +42,7 @@ After=network.target
 User=pocaws-demo
 Group=pocaws-demo
 WorkingDirectory=/opt/pocaws-demo-db
+Environment=PYTHONUNBUFFERED=1
 ExecStart=/usr/bin/python3 /opt/pocaws-demo-db/app.py
 StandardOutput=append:/opt/pocaws-demo-db/app.log
 StandardError=append:/opt/pocaws-demo-db/app.log

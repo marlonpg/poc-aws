@@ -3,15 +3,24 @@
 Terraform for the poc-aws project. Free-tier only. State is local
 (`terraform.tfstate`, gitignored) — fine for a solo POC.
 
-## What this does NOT do
+## What this manages
 
-The EC2 instance (`i-02493c4d817d45bf4`) is pre-existing (created via the
-console) and is **not** imported into Terraform. Terraform only creates
-free-standing resources (new security group, IAM instance profile, S3
-buckets, CloudWatch/X-Ray permissions, CloudTrail, patch baseline).
-Attaching the new SG and instance profile to the instance is a manual step
-below, by design — importing a hand-created instance risks Terraform
-proposing a destructive replace later if some attribute doesn't match.
+Everything, including the EC2 instance itself (`aws_instance.app`,
+`infra/ec2_instance.tf`). This used to be a hand-created instance that
+Terraform only looked up via a data source - it's since been recreated as
+a fully Terraform-owned resource: AMI lookup, security group, IAM instance
+profile, and first-boot provisioning (`user_data`, built from
+`demo-common/bootstrap-common.sh` + each service's `deploy.sh`) are all
+declared here. `terraform apply` is the entire setup - no manual
+attach/swap/tag steps, no SSH, no SSM command needed to get from zero to a
+working demo. See `../RUN.md` for day-2 operations (start/stop, redeploys,
+break/fix).
+
+**AMI filter gotcha**: must resolve to the standard AMI
+(`al2023-ami-2023.*-x86_64`), not `al2023-ami-minimal-*` - the minimal
+variant doesn't ship the SSM Agent, which silently breaks every SSM-based
+command. Learned this the hard way once; see the comment in
+`ec2_instance.tf`.
 
 ## First-time setup
 
@@ -24,53 +33,8 @@ terraform plan   # review carefully: should be all "create", never "destroy"
 terraform apply
 ```
 
-## Manual cutover (run once, in this order)
-
-1. **Start the instance** if it's stopped (Console or
-   `aws ec2 start-instances --instance-ids i-02493c4d817d45bf4`).
-
-2. **Attach the new instance profile only** (SG untouched, SSH still works
-   as a fallback):
-   ```
-   aws ec2 associate-iam-instance-profile \
-     --instance-id i-02493c4d817d45bf4 \
-     --iam-instance-profile Name=$(terraform output -raw instance_profile_name)
-   ```
-
-3. **Verify SSM works before touching the security group**:
-   ```
-   aws ssm start-session --target i-02493c4d817d45bf4
-   ```
-   If this doesn't connect within ~1-2 minutes of the instance being up,
-   stop here and debug (SSM agent status, IAM role) before proceeding —
-   do not close SSH until this works.
-
-4. **Swap the security group** (this is the point SSH access actually
-   closes — the new SG has no port 22 rule at all):
-   ```
-   aws ec2 modify-instance-attribute \
-     --instance-id i-02493c4d817d45bf4 \
-     --groups $(terraform output -raw security_group_id)
-   ```
-   Re-run `aws ssm start-session --target i-02493c4d817d45bf4` to confirm
-   it still works with the new SG.
-
-5. **Tag the instance for patching**:
-   ```
-   aws ec2 create-tags --resources i-02493c4d817d45bf4 \
-     --tags Key="Patch Group",Value=$(terraform output -raw patch_group_tag_value)
-   ```
-
-Filesystem bootstrap for the app itself lives with the app now -
-see `../RUN.md`.
-
-## Cleanup (after a few successful deploys)
-
-Delete the now-unattached original security group (`launch-wizard-1`) once
-you're confident the new setup is stable:
-```
-aws ec2 delete-security-group --group-id sg-00ac13bdd14e152e6
-```
+That's it - the instance self-provisions on first boot (~1-2 min for
+package installs). `../RUN.md` has verification commands.
 
 ## Local CLI auth: `pocaws-admin`, not root
 

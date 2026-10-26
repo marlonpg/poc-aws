@@ -32,38 +32,12 @@ fi
 systemctl enable xray
 systemctl restart xray
 
-# --- CloudWatch agent: one log file per service, one log group each ---
-mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
-cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'CWCONFIG'
-{
-  "logs": {
-    "logs_collected": {
-      "files": {
-        "collect_list": [
-          {
-            "file_path": "/opt/pocaws-orchestrator/app.log",
-            "log_group_name": "/aws/ec2/demo-orchestrator",
-            "log_stream_name": "{instance_id}"
-          },
-          {
-            "file_path": "/opt/pocaws-demo/app.log",
-            "log_group_name": "/aws/ec2/demo-app",
-            "log_stream_name": "{instance_id}"
-          },
-          {
-            "file_path": "/opt/pocaws-demo-db/app.log",
-            "log_group_name": "/aws/ec2/demo-app-db",
-            "log_stream_name": "{instance_id}"
-          }
-        ]
-      }
-    }
-  }
-}
-CWCONFIG
-
+# --- CloudWatch agent: config lives in SSM Parameter Store (Terraform
+# resource aws_ssm_parameter.cloudwatch_agent_config, infra/ssm_parameters.tf)
+# instead of a local file - the instance role already has ssm:GetParameter
+# on /pocaws/* (infra/iam_instance_role.tf), so no extra IAM needed.
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
   -a fetch-config -m ec2 -s \
-  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  -c ssm:/pocaws/cloudwatch-agent-config
 
 echo "Shared bootstrap complete: pip packages, X-Ray daemon, and CloudWatch agent (3 log groups) are ready."

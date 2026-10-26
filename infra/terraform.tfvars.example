@@ -1,5 +1,4 @@
 # Copy to terraform.tfvars (gitignored) and fill in.
 
-aws_region  = "us-east-1"
-instance_id = "i-02493c4d817d45bf4"
-admin_cidr  = "177.7.23.8/32" # your IP, /32
+aws_region = "us-east-1"
+admin_cidr = "177.7.23.8/32" # your IP, /32

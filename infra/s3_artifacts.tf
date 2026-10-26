@@ -32,3 +32,29 @@ resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
     }
   }
 }
+
+# The 3 services' app.py, uploaded by Terraform itself (etag = content hash,
+# so `terraform apply` re-uploads automatically whenever the file changes -
+# no separate `aws s3 cp` step needed). The instance pulls these at first
+# boot via user_data (infra/ec2_instance.tf) and on every later redeploy
+# via each service's own deploy.sh (RUN.md).
+resource "aws_s3_object" "orchestrator_app" {
+  bucket = aws_s3_bucket.artifacts.id
+  key    = "demo-orchestrator/app.py"
+  source = "${path.module}/../demo-orchestrator/app.py"
+  etag   = filemd5("${path.module}/../demo-orchestrator/app.py")
+}
+
+resource "aws_s3_object" "app_app" {
+  bucket = aws_s3_bucket.artifacts.id
+  key    = "demo-app/app.py"
+  source = "${path.module}/../demo-app/app.py"
+  etag   = filemd5("${path.module}/../demo-app/app.py")
+}
+
+resource "aws_s3_object" "db_app" {
+  bucket = aws_s3_bucket.artifacts.id
+  key    = "demo-app-db/app.py"
+  source = "${path.module}/../demo-app-db/app.py"
+  etag   = filemd5("${path.module}/../demo-app-db/app.py")
+}

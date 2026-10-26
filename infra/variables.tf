@@ -10,11 +10,6 @@ variable "project_name" {
   default     = "pocaws"
 }
 
-variable "instance_id" {
-  description = "ID of the existing, manually-created EC2 instance (not managed by Terraform)"
-  type        = string
-}
-
 variable "admin_cidr" {
   description = "CIDR allowed to reach the API on port 8080 (your own IP, e.g. 1.2.3.4/32)"
   type        = string
